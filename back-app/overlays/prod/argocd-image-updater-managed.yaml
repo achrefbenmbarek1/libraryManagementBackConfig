@@ -1,0 +1,24 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: argocd-image-updater
+spec:
+  forProvider:
+    chart:
+      name: argocd-image-updater
+      repository: https://argoproj.github.io/argo-helm
+      version: 0.12.0 
+    namespace: argocd
+    values:
+      config:
+        loglevel: debug
+        registries:
+          - name: Docker Hub
+            api_url: https://index.docker.io
+            # ping: yes
+            credentials: pullsecret:argocd/harbor-registry-secret
+            defaultns: argocd
+            default: true
+  providerConfigRef:
+    name: helm-provider
+

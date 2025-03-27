@@ -1,0 +1,18 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ssh-private-key-secret
+  namespace: argocd
+spec:
+  refreshInterval: "15s"
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: ssh-private-key
+  data:
+    - secretKey: ssh-private-key
+      remoteRef:
+        key: secret/ssh-private-key
+        property: private_key
+

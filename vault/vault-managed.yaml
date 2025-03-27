@@ -1,0 +1,24 @@
+ apiVersion: helm.crossplane.io/v1beta1
+ kind: Release
+ metadata:
+   name: hashicorp-vault
+ spec:
+   forProvider:
+     chart:
+       name: vault
+       repository: https://helm.releases.hashicorp.com
+       version: 0.29.1
+     values:
+       server:
+         dev:
+           enabled: true
+         ingress:
+           enabled: true
+           ingressClassName: "nginx"
+           hosts:
+             - host: hashicorp-vault.local
+     namespace: vault
+   providerConfigRef:
+     name: helm-provider
+
+

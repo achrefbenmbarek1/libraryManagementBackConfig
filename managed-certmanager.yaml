@@ -1,0 +1,18 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: cert-manager
+  namespace: crossplane-system
+spec:
+  forProvider:
+    chart:
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: v1.16.2
+    namespace: cert-manager 
+    values:                
+      installCRDs: true
+      extraArgs:
+        - "--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53"
+  providerConfigRef:
+    name: helm-provider

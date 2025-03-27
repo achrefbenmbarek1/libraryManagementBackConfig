@@ -1,0 +1,18 @@
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: backend-servicemonitor
+#   namespace: monitoring   
+#   labels:
+#     release: kube-prometheus-stack  # this label is often required so that Prometheus picks it up
+# spec:
+#   selector:
+#     matchLabels:
+#       service: backend-service
+#   namespaceSelector:
+#     matchNames:
+#       - backend
+#   endpoints:
+#     - port: http-metrics
+#       path: /metrics
+#       interval: 30s

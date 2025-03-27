@@ -1,0 +1,20 @@
+repositories:
+- name: crossplane
+  url: https://charts.crossplane.io/stable
+- name: cilium
+  url: https://helm.cilium.io/
+
+releases:
+# - name: cilium
+#   chart: cilium/cilium
+#   version: 1.16.4
+#   namespace: kube-system
+#   createNamespace: true
+#   values:
+#   - "./cilium-values.yaml" 
+
+- name: crossplane
+  namespace: crossplane-system
+  createNamespace: true
+  chart: crossplane-stable/crossplane
+  version: 1.18.1

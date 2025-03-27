@@ -1,0 +1,61 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: backendapplications.example.org
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  group: example.org
+  names:
+    kind: BackendApplication
+    plural: backendapplications
+  claimNames:
+    kind: BackendApplicationClaim
+    plural: backendapplicationclaims
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              namespace:
+                type: string
+              image:
+                type: string
+              replicas:
+                type: integer
+                default: 1
+              config:
+                type: object
+                additionalProperties:
+                  type: string
+              secret:
+                type: object
+                additionalProperties:
+                  type: string
+                  format: byte
+              servicePorts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    port:
+                      type: integer
+                    targetPort:
+                      type: integer
+                    name:
+                      type: string
+                    protocol:
+                      type: string
+                      default: TCP
+              secretName:
+                type: string
+                default: spring-boot-secrets
+            required:
+              - namespace
+              # - image

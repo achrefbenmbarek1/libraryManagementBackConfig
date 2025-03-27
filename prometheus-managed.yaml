@@ -1,0 +1,59 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: prometheus-stack
+spec:
+# rollbackLimit: 3
+  forProvider:
+    chart:
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 66.3.0
+#     pullSecretRef:
+#       name: museum-creds
+#       namespace: default
+#     url: "https://charts.bitnami.com/bitnami/wordpress-9.3.19.tgz"
+    namespace: monitoring
+    values:
+      grafana:
+        ingress:
+          ## If true, Grafana Ingress will be created
+          ##
+          enabled: true
+
+          ## IngressClassName for Grafana Ingress.
+          ## Should be provided if Ingress is enable.
+          ##
+          ingressClassName: nginx
+
+          ## Annotations for Grafana Ingress
+          ##
+          annotations: 
+            # cert-manager.io/cluster-issuer: cert-manager-webhook-duckdns-production
+
+          ## Labels to be added to the Ingress
+          ##
+          labels: {}
+
+          ## Hostnames.
+          ## Must be provided if Ingress is enable.
+          ##
+          hosts:
+            # - hououin-kyouma.duckdns.org
+            - monitoring.local
+
+          ## Path for grafana ingress
+          path: /
+
+          ## TLS configuration for grafana Ingress
+          ## Secret must be manually created in the namespace
+          ##
+          tls: []
+          # tls:
+          #   - secretName: hououin-kyouma.duckdns.org-tls
+          #     hosts:
+          #     - hououin-kyouma.duckdns.org
+
+      
+  providerConfigRef:
+    name: helm-provider

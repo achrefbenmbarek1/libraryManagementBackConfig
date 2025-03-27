@@ -1,0 +1,20 @@
+# apiVersion: monitoring.coreos.com/v1
+# kind: PrometheusRule
+# metadata:
+#   name: backend-alerts
+#   namespace: monitoring
+#   labels:
+#     release: kube-prometheus-stack
+# spec:
+#   groups:
+#     - name: myapp.rules
+#       rules:
+#         - alert: MyAppLowRequestRate
+#           expr: sum(rate(http_requests_total{job="back-service"}[1m])) < 5
+#           for: 2m
+#           labels:
+#             severity: critical
+#           annotations:
+#             summary: "Back request rate is low"
+#             description: "The total request rate for backend has dropped below 5 req/s for over 2 minutes."
+#

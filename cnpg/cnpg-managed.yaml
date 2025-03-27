@@ -1,0 +1,14 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: cnpg
+spec:
+  forProvider:
+    chart:
+      name: cloudnative-pg
+      repository: https://cloudnative-pg.github.io/charts
+      version: 0.23.0
+    namespace: cnpg
+  providerConfigRef:
+    name: helm-provider
+

@@ -1,0 +1,32 @@
+apiVersion: helm.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: cnpg-cluster
+spec:
+  forProvider:
+    chart:
+      name: cluster
+      repository: https://cloudnative-pg.github.io/charts
+      version: 0.2.0
+    namespace: cnpg-cluster
+    values:
+      cluster:
+        instances: 3
+        storage:
+          size: 5Gi
+        primaryUpdateStrategy: unsupervised
+        initdb:
+          database: test
+          owner: test
+          secret:
+            name: postgres-secret
+        postgresql:
+          parameters:
+            max_connections: "100"
+            shared_buffers: "128MB"
+          pg_hba:
+            - "local all all md5"
+            - "host all all 0.0.0.0/0 md5"
+  providerConfigRef:
+    name: helm-provider
+

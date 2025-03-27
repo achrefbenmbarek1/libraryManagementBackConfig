@@ -1,0 +1,71 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: spring-boot-app
+#   namespace: backend
+#   labels:
+#     app: spring-boot-app
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: spring-boot-app
+#   template:
+#     metadata:
+#       labels:
+#         app: spring-boot-app
+#     spec:
+#       imagePullSecrets:
+#       - name: harbor-registry-secret
+#       containers:
+#         - name: spring-boot-container
+#           image: achrefbenmbarek123159/arm:backend-0.0.7
+#           ports:
+#             - containerPort: 8080
+#           env:
+#             - name: SPRING_DATASOURCE_URL
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: spring-boot-config
+#                   key: spring.datasource.url
+#             - name: SPRING_JPA_SHOW_SQL
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: spring-boot-config
+#                   key: spring.jpa.show-sql
+#             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: spring-boot-config
+#                   key: spring.jpa.hibernate.ddl-auto
+#             - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: spring-boot-config
+#                   key: spring.jpa.properties.hibernate.dialect
+#             - name: SERVER_PORT
+#               valueFrom:
+#                 configMapKeyRef:
+#                   name: spring-boot-config
+#                   key: server.port
+#
+#             - name: SPRING_DATASOURCE_USERNAME
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: spring-boot-secrets
+#                   key: spring.datasource.username
+#             - name: SPRING_DATASOURCE_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: spring-boot-secrets
+#                   key: spring.datasource.password
+#             - name: SPRING_SECURITY_USER_NAME
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: spring-boot-secrets
+#                   key: spring.security.user.name
+#             - name: SPRING_SECURITY_USER_PASSWORD
+#               valueFrom:
+#                 secretKeyRef:
+#                   name: spring-boot-secrets
+#                   key: spring.security.user.password

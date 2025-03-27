@@ -1,0 +1,34 @@
+apiVersion: example.org/v1alpha1
+kind: BackendApplicationClaim
+metadata:
+  name: my-backend-app
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+
+spec:
+  namespace: backend
+  image: achrefbenmbarek123159/arm:0.0.21
+  # image: PLACEHOLDER_IMAGE
+  # config:
+    # spring.datasource.url: "jdbc:postgresql://cnpg-cluster-rw.cnpg-cluster.svc.cluster.local:5432/test"
+    # spring.jpa.show-sql: "true"
+    # spring.jpa.hibernate.ddl-auto: "update"
+    # spring.jpa.properties.hibernate.dialect: "org.hibernate.dialect.PostgreSQLDialect"
+    # server.port: "8080"
+    # spring.servlet.multipart.max-file-size: "6MB"
+    # spring.servlet.multipart.max-request-size: "6MB"
+    # spring.security.basic.enabled: "true"
+  # secret:
+  #   spring.datasource.username: dGVzdA==
+  #   spring.datasource.password: eFZVd1FtYnBibUcwZDdjRlFVdEh4Sk14VDMwSTFXNUc3SHBNOUdwck1IYWl0Z0I5UW90aWFLWTN5cE9LYmhadQ==
+  #   spring.security.user.name: YWNocmVm
+  #   spring.security.user.password: ZWxwc3ljb25ncm9v
+  # servicePorts:
+  #   - port: 8080
+  #     targetPort: 8080
+  #     name: http
+  #   - port: 9432
+  #     targetPort: 9432
+  #     name: metrics

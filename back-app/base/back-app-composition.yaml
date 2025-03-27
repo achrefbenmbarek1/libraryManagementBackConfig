@@ -1,0 +1,303 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: backend-application-composition
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  compositeTypeRef:
+    apiVersion: example.org/v1alpha1
+    kind: BackendApplication
+  resources:
+    - name: namespace
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: ""
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.name
+
+    - name: configmap
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: spring-boot-config
+                namespace: ""
+              data:     
+                spring.datasource.url: "jdbc:postgresql://cnpg-cluster-rw.cnpg-cluster.svc.cluster.local:5432/test"
+                spring.jpa.show-sql: "true"
+                spring.jpa.hibernate.ddl-auto: "update"
+                spring.jpa.properties.hibernate.dialect: "org.hibernate.dialect.PostgreSQLDialect"
+                server.port: "8080"
+                spring.servlet.multipart.max-file-size: "6MB"
+                spring.servlet.multipart.max-request-size: "6MB"
+                spring.security.basic.enabled: "true"
+        providerConfigRef:
+          name: default
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        # - fromFieldPath: spec.config
+        #   toFieldPath: spec.forProvider.manifest.data
+
+    # - name: secret
+    #   base:
+    #     apiVersion: kubernetes.crossplane.io/v1alpha1
+    #     kind: Object
+    #     spec:
+    #       forProvider:
+    #         manifest:
+    #           apiVersion: v1
+    #           kind: Secret
+    #           metadata:
+    #             name: spring-boot-secrets
+    #             namespace: ""
+    #           data: {}
+    #     providerConfigRef:
+    #       name: default
+    #   patches:
+    #     - fromFieldPath: spec.namespace
+    #       toFieldPath: spec.forProvider.manifest.metadata.namespace
+    #     - fromFieldPath: spec.secret
+    #       toFieldPath: spec.forProvider.manifest.data
+
+    - name: secret
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: external-secrets.io/v1beta1
+              kind: ExternalSecret
+              metadata:
+                name: spring-secrets
+                namespace: ""
+              spec:
+                refreshInterval: "15s"
+                secretStoreRef:
+                  name: vault-backend
+                  kind: ClusterSecretStore
+                target:
+                  name: spring-boot-secrets  
+                data:
+                  - secretKey: spring.datasource.username
+                    remoteRef:
+                      key: secret/spring-app  
+                      property: username      
+                  - secretKey: spring.datasource.password
+                    remoteRef:
+                      key: secret/spring-app
+                      property: password      
+                  - secretKey: spring.security.user.name
+                    remoteRef:
+                      key: secret/spring-app
+                      property: user_name     
+                  - secretKey: spring.security.user.password
+                    remoteRef:
+                      key: secret/spring-app
+                      property: user_password 
+              providerConfigRef:
+                name: default
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+    - name: deployment
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: spring-boot-app
+                namespace: ""
+                labels:
+                  app: spring-boot-app
+              spec:
+                replicas: 1
+                selector:
+                  matchLabels:
+                    app: spring-boot-app
+                template:
+                  metadata:
+                    labels:
+                      app: spring-boot-app
+                  spec:
+                    imagePullSecrets:
+                      - name: harbor-registry-secret
+                    containers:
+                      - name: spring-boot-container
+                        # image: "achrefbenmbarek123159/arm:backend-0.0.7"
+                        ports:
+                          - containerPort: 8080
+                        env:
+                          - name: SPRING_DATASOURCE_URL
+                            valueFrom:
+                              configMapKeyRef:
+                                name: spring-boot-config
+                                key: spring.datasource.url
+                          - name: SPRING_JPA_SHOW_SQL
+                            valueFrom:
+                              configMapKeyRef:
+                                name: spring-boot-config
+                                key: spring.jpa.show-sql
+                          - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+                            valueFrom:
+                              configMapKeyRef:
+                                name: spring-boot-config
+                                key: spring.jpa.hibernate.ddl-auto
+                          - name: SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT
+                            valueFrom:
+                              configMapKeyRef:
+                                name: spring-boot-config
+                                key: spring.jpa.properties.hibernate.dialect
+                          - name: SERVER_PORT
+                            valueFrom:
+                              configMapKeyRef:
+                                name: spring-boot-config
+                                key: server.port
+                          - name: SPRING_DATASOURCE_USERNAME
+                            valueFrom:
+                              secretKeyRef:
+                                name: spring-boot-secrets
+                                key: spring.datasource.username
+                          - name: SPRING_DATASOURCE_PASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                name: spring-boot-secrets
+                                key: spring.datasource.password
+                          - name: SPRING_SECURITY_USER_NAME
+                            valueFrom:
+                              secretKeyRef:
+                                name: spring-boot-secrets
+                                key: spring.security.user.name
+                          - name: SPRING_SECURITY_USER_PASSWORD
+                            valueFrom:
+                              secretKeyRef:
+                                name: spring-boot-secrets
+                                key: spring.security.user.password
+        providerConfigRef:
+          name: default
+
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - fromFieldPath: spec.replicas
+          toFieldPath: spec.forProvider.manifest.spec.replicas
+        - fromFieldPath: spec.image
+          toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].image
+
+    - name: registry-secret
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: external-secrets.io/v1beta1
+              kind: ExternalSecret
+              metadata:
+                name: harbor-registry-secret
+                namespace: backend
+              spec:
+                refreshInterval: "15s"
+                secretStoreRef:
+                  name: vault-backend
+                  kind: ClusterSecretStore
+                target:
+                  name: harbor-registry-secret
+                  creationPolicy: Owner
+                  template:
+                    type: kubernetes.io/dockerconfigjson  
+                    data:
+                      .dockerconfigjson: "{{ .dockerconfigjson | toString }}"
+                data:
+                  - secretKey: dockerconfigjson
+                    remoteRef:
+                      key: secret/docker-registry-credentials
+                      property: dockerconfigjson
+              providerConfigRef:
+                name: default
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.spec.secretStoreRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "vault-%s"
+
+    - name: service
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: backend-service
+                namespace: ""
+                annotation:
+                  prometheus.io/scrape: "true"
+                  prometheus.io/path: "/actuator/prometheus"
+                  prometheus.io/port: "8080"
+              spec:
+                selector:
+                  app: spring-boot-app
+                type: ClusterIP
+                ports: 
+                - name: spring
+                  port: 8080
+                  targetPort: 8080
+                  protocol: TCP
+                # - name: metrics
+                #   port: 9432
+                #   targetPort: 9432
+                #   protocol: TCP
+        providerConfigRef:
+          name: default
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+        - fromFieldPath: spec.servicePorts
+          toFieldPath: spec.forProvider.manifest.spec.ports
+
+    - name: vault-token
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha1
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: vault-token
+                namespace: backend
+              type: Opaque
+              stringData:
+                token: root
+      patches:
+        - fromFieldPath: spec.namespace
+          toFieldPath: spec.forProvider.manifest.metadata.namespace
+
