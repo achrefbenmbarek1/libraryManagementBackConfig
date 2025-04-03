@@ -8,3 +8,7 @@ resources:
 #     newTag: backend-0.0.12
 configurations:
 - kustomizeconfig.yaml
+images:
+- name: achrefbenmbarek123159/arm
+  newName: achrefbenmbarek123159/arm
+  newTag: 0.0.23
